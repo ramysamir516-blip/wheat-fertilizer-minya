@@ -27,8 +27,6 @@ table{width:100%;border-collapse:collapse;margin-top:10px}
 td,th{border-bottom:1px solid #e2eae3;padding:9px;text-align:right}
 th{background:#edf6ef}
 .note{font-size:14px;color:#52675a}
-.voice-button{background:#e9f1eb;color:var(--green);width:100%;margin-top:10px}
-.voice-status{font-size:13px;color:#52675a;margin:6px 2px 0;min-height:1.5em}
 .badge{display:inline-block;background:#fff4d7;color:#75550b;padding:4px 9px;border-radius:20px;font-size:13px}
 footer{text-align:center;padding:20px;color:#607267;font-size:13px}
 @media(max-width:520px){.row{grid-template-columns:1fr}header h1{font-size:21px}}
@@ -47,8 +45,6 @@ footer{text-align:center;padding:20px;color:#607267;font-size:13px}
       <div><label for="fed">المساحة بالفدان</label><input id="fed" type="number" min="0" step="0.01" value="1"></div>
       <div><label for="kirat">والقيراط</label><input id="kirat" type="number" min="0" max="23" step="1" value="0"></div>
     </div>
-    <button type="button" class="voice-button no-print" onclick="startAreaRecognition()">🎙️ أدخل المساحة بالصوت</button>
-    <p id="voiceStatus" class="voice-status no-print" aria-live="polite">مثال: «عندي فدان ونصف» أو «فدانين وربع».</p>
     <label for="soil">نوع الأرض</label>
     <select id="soil"><option value="old">أراضي الوادي القديمة (التوصيات الأساسية)</option></select>
     <label for="nType">اختر السماد النيتروجيني</label>
@@ -117,68 +113,6 @@ function calculate(){
  document.getElementById('result').scrollIntoView({behavior:'smooth'});
 }
 
-function normalizeArabicDigits(value){
- return String(value).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.').replace(/،/g,',');
-}
-function parseSpokenArea(transcript){
- const t=normalizeArabicDigits(transcript).toLowerCase().replace(/[ًٌٍَُِّْـ]/g,'').replace(/[أإآ]/g,'ا');
- const numeric=t.match(/(?:^|\s)(\d+(?:[.,]\d+)?)/);
- let area=null;
- if(numeric){
-   area=Number(numeric[1].replace(',','.'));
-   if(/نصف|نص/.test(t) && !/[.,]5(?:\s|$)/.test(numeric[1])) area+=0.5;
-   else if(/ربع/.test(t) && !/[.,]25(?:\s|$)/.test(numeric[1])) area+=0.25;
- }else{
-   let whole=0;
-   if(/فدانين|فدانان/.test(t)) whole=2;
-   else if(/ثلاثة افدنة|ثلاث افدنة|تلاتة افدنة|تلات افدنة/.test(t)) whole=3;
-   else if(/اربعة افدنة|اربع افدنة/.test(t)) whole=4;
-   else if(/خمسة افدنة|خمس افدنة/.test(t)) whole=5;
-   else if(/فدان/.test(t)) whole=1;
-   else if(/واحد|واحدة/.test(t)) whole=1;
-   else if(/اتنين|اثنين|تنين/.test(t)) whole=2;
-   else if(/تلاتة|ثلاثة/.test(t)) whole=3;
-   if(/نصف فدان|نص فدان/.test(t)) area=0.5;
-   else if(/نصف|نص/.test(t)) area=whole+0.5;
-   else if(/ثلاثة ارباع|تلات تربع/.test(t)) area=whole+0.75;
-   else if(/ربع/.test(t)) area=whole+0.25;
-   else if(whole>0) area=whole;
- }
- return Number.isFinite(area) && area>0 ? area : null;
-}
-function startAreaRecognition(){
- const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!Recognition){
-   alert('عذراً، متصفحك لا يدعم التعرف على الصوت. جرّب فتح الحاسبة باستخدام Google Chrome أو Microsoft Edge.');
-   return;
- }
- const status=document.getElementById('voiceStatus');
- const button=document.querySelector('button[onclick="startAreaRecognition()"]');
- const recognition=new Recognition();
- recognition.lang='ar-EG'; recognition.interimResults=false; recognition.maxAlternatives=1;
- if(status) status.textContent='جارٍ الاستماع... تحدث الآن واذكر مساحة الأرض.';
- if(button) button.disabled=true;
- recognition.onresult=function(event){
-   const transcript=event.results[0][0].transcript;
-   const area=parseSpokenArea(transcript);
-   if(area===null){
-     if(status) status.textContent='لم أتمكن من تحديد المساحة من: «'+transcript+'». حاول قول: فدان ونصف.';
-     alert('لم أتعرف على المساحة. أعد المحاولة واذكر عدد الأفدنة والقيراط بوضوح.');
-     return;
-   }
-   let f=Math.floor(area), k=Math.round((area-f)*24);
-   if(k>=24){f++;k=0;}
-   document.getElementById('fed').value=f;
-   document.getElementById('kirat').value=k;
-   if(status) status.textContent='تم التعرف على: '+transcript+' — المساحة المدخلة: '+f+' فدان و'+k+' قيراط.';
- };
- recognition.onerror=function(event){
-   const messages={'not-allowed':'لم تسمح باستخدام الميكروفون. راجع أذونات الموقع من إعدادات المتصفح.','service-not-allowed':'خدمة التعرف على الصوت غير متاحة.','no-speech':'لم يتم التقاط صوت. حاول التحدث بالقرب من الميكروفون.','audio-capture':'لم يتم العثور على ميكروفون متصل.'};
-   if(status) status.textContent=messages[event.error]||'حدثت مشكلة أثناء التعرف على الصوت. حاول مرة أخرى.';
- };
- recognition.onend=function(){if(button) button.disabled=false;};
- try{recognition.start();}catch(error){if(button)button.disabled=false;if(status)status.textContent='تعذر بدء الميكروفون. تأكد من السماح باستخدامه ثم حاول مرة أخرى.';}
-}
 function speakResults(){
  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)){
    alert('عذراً، متصفحك لا يدعم قراءة النصوص بصوت. جرّب Google Chrome أو Microsoft Edge.');
