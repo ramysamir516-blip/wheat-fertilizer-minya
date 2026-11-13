@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#176b45">
+<title>حاسبة تسميد القمح | إرشاد المنيا</title>
+<style>
+:root{--green:#176b45;--light:#eef7f0;--gold:#e6b84b;--ink:#18352a}
+*{box-sizing:border-box}body{margin:0;background:#f4f7f4;color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.7}
+header{background:linear-gradient(130deg,#145b3c,#26865a);color:white;padding:25px 16px;text-align:center}
+header h1{margin:0;font-size:25px}header p{margin:7px 0 0}
+main{max-width:760px;margin:18px auto;padding:0 12px}
+.card{background:white;border-radius:16px;padding:18px;margin:13px 0;box-shadow:0 3px 14px #173b2412}
+h2{font-size:19px;margin:0 0 12px;color:var(--green)}
+label{display:block;font-weight:bold;margin:12px 0 5px}
+input,select{width:100%;padding:13px;border:1px solid #cbd9ce;border-radius:10px;font-size:17px;background:white}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.check{display:flex;align-items:center;gap:10px;background:var(--light);padding:12px;border-radius:10px;margin-top:14px}
+.check input{width:20px;height:20px}
+button{border:0;border-radius:11px;padding:14px 18px;font-size:17px;font-weight:bold;cursor:pointer}
+.primary{background:var(--green);color:white;width:100%;margin-top:16px}
+.secondary{background:#e9f1eb;color:var(--green);width:100%;margin-top:10px}
+.result{display:none}
+.total{font-size:25px;color:var(--green);font-weight:bold}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+td,th{border-bottom:1px solid #e2eae3;padding:9px;text-align:right}
+th{background:#edf6ef}
+.note{font-size:14px;color:#52675a}
+.badge{display:inline-block;background:#fff4d7;color:#75550b;padding:4px 9px;border-radius:20px;font-size:13px}
+footer{text-align:center;padding:20px;color:#607267;font-size:13px}
+@media(max-width:520px){.row{grid-template-columns:1fr}header h1{font-size:21px}}
+@media print{body{background:white}.no-print,header p{display:none!important}.card{box-shadow:none;border:1px solid #ddd}.result{display:block!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌾 حاسبة تسميد القمح</h1>
+  <p>إرشاد المنيا – معاً نحو زراعة أفضل</p>
+</header>
+<main>
+  <section class="card">
+    <h2>بيانات الحقل</h2>
+    <div class="row">
+      <div><label for="fed">المساحة بالفدان</label><input id="fed" type="number" min="0" step="0.01" value="1"></div>
+      <div><label for="kirat">والقيراط</label><input id="kirat" type="number" min="0" max="23" step="1" value="0"></div>
+    </div>
+    <label for="soil">نوع الأرض</label>
+    <select id="soil"><option value="old">أراضي الوادي القديمة (التوصيات الأساسية)</option></select>
+    <label for="nType">اختر السماد النيتروجيني</label>
+    <select id="nType">
+      <option value="urea">يوريا 46% أزوت</option>
+      <option value="nitrate">نترات نشادر 33.5% أزوت</option>
+      <option value="sulfate">سلفات نشادر 20.6% أزوت</option>
+      <option value="calcium">نترات جير 15.5% أزوت</option>
+    </select>
+    <label for="pType">اختر السماد الفوسفاتي</label>
+    <select id="pType">
+      <option value="single">سوبر فوسفات أحادي 15% (100 كجم/فدان)</option>
+      <option value="double">فوسفات ثنائي 37% (40 كجم/فدان)</option>
+      <option value="triple">فوسفات ثلاثي 45% (33 كجم/فدان)</option>
+    </select>
+    <div class="check"><input id="manure" type="checkbox"><label for="manure" style="margin:0">سأضيف 20 متر مكعب سماد بلدي قديم ومتحلل لكل فدان</label></div>
+    <button class="primary no-print" onclick="calculate()">احسب احتياجات السماد</button>
+  </section>
+
+  <section class="card result" id="result">
+    <h2>نتيجة الحساب</h2>
+    <div id="summary"></div>
+    <div id="nitrogen"></div>
+    <div id="phosphorus"></div>
+    <div id="potassium"></div>
+    <div class="note" id="warning"></div>
+    <button class="secondary no-print" onclick="window.print()">طباعة النتيجة / حفظ PDF</button>
+  </section>
+
+  <section class="card">
+    <h2>ملاحظات إرشادية مهمة</h2>
+    <ul>
+      <li>الحساب مبني على نشرة «زراعة القمح في الأراضي القديمة – أرض الوادي»، نشرة رقم 1449، موسم 2025/2026.</li>
+      <li>الجرعة الأساسية للأزوت 75 كجم أزوت فعّال للفدان، وتُقسم: 20% عند الزراعة، و40% عند رية المحاياة، و40% عند الرية الثانية.</li>
+      <li>عند إضافة السماد البلدي بالمعدل المذكور، تخفض كمية الأزوت الكيميائي بمقدار 15 كجم أزوت فعّال للفدان.</li>
+      <li>السماد الفوسفاتي يضاف أثناء خدمة الأرض وقبل آخر حرثة. البوتاسيوم: 24 كجم بو₂أ للفدان، بما يعادل 50 كجم سلفات بوتاسيوم 48%.</li>
+      <li>التوصية استرشادية للأراضي القديمة، ويُراعى تحليل التربة ونوع السماد الفعلي وتركيزه، وحالة الحقل وتوجيهات مهندس الإرشاد.</li>
+    </ul>
+  </section>
+</main>
+<footer>إعداد مبدئي للاستخدام الإرشادي – إرشاد المنيا</footer>
+<script>
+const nRates={urea:163,nitrate:224,sulfate:364,calcium:448};
+const nNames={urea:"يوريا 46% أزوت",nitrate:"نترات نشادر 33.5% أزوت",sulfate:"سلفات نشادر 20.6% أزوت",calcium:"نترات جير 15.5% أزوت"};
+const pRates={single:100,double:40,triple:33};
+function fmt(x){return (Math.round(x*100)/100).toLocaleString('ar-EG',{maximumFractionDigits:2});}
+function calculate(){
+ const f=Math.max(0,Number(document.getElementById('fed').value)||0);
+ const k=Math.max(0,Math.min(23,Number(document.getElementById('kirat').value)||0));
+ const area=f+k/24;
+ if(area<=0){alert('من فضلك أدخل مساحة صحيحة.');return;}
+ const manure=document.getElementById('manure').checked;
+ const nType=document.getElementById('nType').value;
+ const pType=document.getElementById('pType').value;
+ const nActive=(75-(manure?15:0))*area;
+ const nProduct=nRates[nType]*(manure?60/75:1)*area;
+ const pProduct=pRates[pType]*area;
+ const manureQty=manure?20*area:0;
+ document.getElementById('summary').innerHTML=`<p>المساحة المحسوبة: <span class="total">${fmt(area)} فدان</span></p><p class="badge">التوصية للأراضي القديمة</p>`;
+ document.getElementById('nitrogen').innerHTML=`<h3>1) السماد النيتروجيني</h3><p>النوع: ${nNames[nType]}</p><p>إجمالي السماد المطلوب: <span class="total">${fmt(nProduct)} كجم</span></p><table><tr><th>موعد الإضافة</th><th>النسبة</th><th>كمية السماد</th></tr><tr><td>عند الزراعة وقبل رية الزراعة</td><td>20%</td><td>${fmt(nProduct*.2)} كجم</td></tr><tr><td>عند رية المحاياة (لا تتأخر عن 25 يوماً)</td><td>40%</td><td>${fmt(nProduct*.4)} كجم</td></tr><tr><td>عند الرية الثانية</td><td>40%</td><td>${fmt(nProduct*.4)} كجم</td></tr></table><p>إجمالي الأزوت الفعّال: ${fmt(nActive)} كجم.</p>`;
+ document.getElementById('phosphorus').innerHTML=`<h3>2) السماد الفوسفاتي</h3><p>${document.getElementById('pType').selectedOptions[0].text.split(' (')[0]}: <span class="total">${fmt(pProduct)} كجم</span></p><p>يضاف أثناء خدمة الأرض وقبل آخر حرثة ويخلط بالتربة.</p>`;
+ document.getElementById('potassium').innerHTML=`<h3>3) السماد البوتاسي</h3><p>سلفات بوتاسيوم 48%: <span class="total">${fmt(50*area)} كجم</span> (تعادل ${fmt(24*area)} كجم بو₂أ).</p><p>يفضل بدء الإضافة بعد شهر من الزراعة، ويمكن تقسيمها مع الري حتى طرد السنابل أو إضافتها أثناء الخدمة وفق النظام المتبع.</p>${manure?`<p>السماد البلدي المتحلل: ${fmt(manureQty)} متر مكعب.</p>`:''}`;
+ document.getElementById('warning').innerHTML='<b>تنبيه:</b> لا تعتمد الكمية النهائية دون مراجعة تحليل التربة والتأكد من تركيز السماد المكتوب على الشيكارة. لا تجمع بين أكثر من مصدر سمادي على أساس أن أوزانها متساوية؛ الحساب هنا يختار مصدراً واحداً لكل عنصر.';
+ document.getElementById('result').style.display='block';
+ document.getElementById('result').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
