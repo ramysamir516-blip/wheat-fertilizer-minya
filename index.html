@@ -71,7 +71,8 @@ footer{text-align:center;padding:20px;color:#607267;font-size:13px}
     <div id="phosphorus"></div>
     <div id="potassium"></div>
     <div class="note" id="warning"></div>
-    <button type="button" class="secondary no-print" onclick="speakResults()">🔊 اقرأ النتائج والتعليمات بصوت</button>
+    <button type="button" id="speakButton" class="secondary no-print" onclick="speakResults()">🔊 اقرأ النتائج والتعليمات بصوت</button>
+    <p id="speechStatus" class="note no-print" role="status" aria-live="polite"></p>
     <button class="secondary no-print" onclick="window.print()">طباعة النتيجة / حفظ PDF</button>
   </section>
 
@@ -114,21 +115,46 @@ function calculate(){
 }
 
 function speakResults(){
+ const status=document.getElementById('speechStatus');
+ const sayStatus=(message)=>{if(status)status.textContent=message;};
  if(!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)){
-   alert('عذراً، متصفحك لا يدعم قراءة النصوص بصوت. جرّب Google Chrome أو Microsoft Edge.');
+   sayStatus('متصفح الهاتف لا يدعم تشغيل القراءة الصوتية. افتح الحاسبة في Google Chrome.');
    return;
  }
  const result=document.getElementById('result');
- if(!result || result.style.display==='none'){alert('احسب احتياجات السماد أولاً، ثم اضغط على زر قراءة النتائج.');return;}
- const textToRead=result.innerText.trim();
- if(!textToRead)return;
- window.speechSynthesis.cancel();
- const utterance=new SpeechSynthesisUtterance(textToRead);
- utterance.lang='ar-EG'; utterance.rate=0.88; utterance.pitch=1;
- const voices=window.speechSynthesis.getVoices();
- const arabicVoice=voices.find(v=>/^ar([_-]|$)/i.test(v.lang));
- if(arabicVoice)utterance.voice=arabicVoice;
- window.speechSynthesis.speak(utterance);
+ if(!result || result.style.display==='none'){
+   sayStatus('احسب احتياجات السماد أولاً، ثم اضغط على زر قراءة النتائج.');
+   return;
+ }
+ const textToRead=['summary','nitrogen','phosphorus','potassium','warning']
+   .map(id=>document.getElementById(id)?.innerText || '')
+   .filter(Boolean).join('. ');
+ if(!textToRead.trim()){
+   sayStatus('لا توجد نتائج لقراءتها. اضغط على احسب احتياجات السماد أولاً.');
+   return;
+ }
+ try{
+   const synth=window.speechSynthesis;
+   synth.cancel();
+   synth.resume();
+   const utterance=new SpeechSynthesisUtterance(textToRead);
+   utterance.lang='ar-EG';
+   utterance.rate=0.88;
+   utterance.pitch=1;
+   utterance.volume=1;
+   const voices=synth.getVoices();
+   const arabicVoice=voices.find(v=>/^ar([_-]|$)/i.test(v.lang));
+   if(arabicVoice)utterance.voice=arabicVoice;
+   utterance.onstart=()=>sayStatus('🔊 بدأت قراءة النتائج...');
+   utterance.onend=()=>sayStatus('انتهت قراءة النتائج.');
+   utterance.onerror=(event)=>{
+     sayStatus('تعذر تشغيل الصوت على الهاتف ('+(event.error || 'خطأ غير معروف')+'). تأكد من اختيار Google Text-to-Speech كمحرك تحويل النص إلى كلام.');
+   };
+   sayStatus('جارٍ تجهيز الصوت...');
+   synth.speak(utterance);
+ }catch(error){
+   sayStatus('حدث خطأ أثناء تشغيل الصوت: '+(error.message || error));
+ }
 }
 
 </script>
